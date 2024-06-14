@@ -19,6 +19,9 @@ const CheckAuth = () => {
         const data = await response.json(); 
         setIsLoggedIn(data.authenticated);
         setUserData(data.user);
+        if(!data.isSetup){
+          window.location="./setup"
+        }
       } else {
         const errorData = await response.json(); 
       }

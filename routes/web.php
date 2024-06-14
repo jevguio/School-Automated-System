@@ -1,35 +1,90 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request; 
- 
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SetupController;
 
 // API routes for authentication
 
-Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth')->get('/logout', [AuthController::class, 'logout']);
 
-Route::post('/register', [RegisterController::class, 'register']);
-Route::get('/', function () {
-    return view('main');
-}); 
-Route::get('/login', function () {
-    if (Auth::check()) { 
-        return response()->json(['authenticated' => true]);
+
+Route::post('/setup', [SetupController::class, 'setup'])->name('setup'); 
+Route::post('/setup/SetupDB', [SetupController::class, 'SetupDB'])->name('SetupDB');
+Route::post('/setup/CheckDB', [SetupController::class, 'CheckDB'])->name('CheckDB');  
+
+Route::get('/environmentFilePath', function () {
+
+    $envFile = app()->environmentFilePath();
+    
+    $str = file_get_contents($envFile);
+    return response()->json([ 
+        $envFile =>$str
+    ]);
+});
+Route::get('/setup', function () {
+    $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
+
+    if ($adminUserExists) {
+        return route('login');
     } else {
-        return response()->json(['authenticated' => false]);
+
+        return view('setup');
     }
-})->name('login'); 
+});
+
+Route::get('/', function () {
+    try {
+        // Attempt to run a simple query
+        DB::connection()->getPdo();
+        $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
+
+        if (!$adminUserExists) {
+            // No admin user exists, redirect to setup or perform appropriate action
+            return redirect()->route('setup');
+        }
+    } catch (QueryException $e) {
+        // If it fails, assume the database does not exist
+        // Run the migrations to create the database and tables
+        Artisan::call('migrate', ['--force' => true]);
+    }
+
+    return view('main');
+});
+
+Route::middleware([\App\Http\Middleware\CheckAdminUser::class])->group(function () {
+
+    
+    Route::post('/login', [AuthController::class, 'login']);
+    
+    Route::get('/login', function () {
+        if (Auth::check()) {
+            return response()->json(['authenticated' => true]);
+        } else {
+            return response()->json(['authenticated' => false]);
+        }
+    })->name('login');
+
+    Route::post('/register', [RegisterController::class, 'register']);
+});
+
+
 
 // Route definition
 Route::middleware('auth')->get('/check-auth', function () {
-    
-    if (Auth::check()) { 
-        $user = Auth::user();
-        return response()->json(['authenticated' => true, 'user' => $user]);
+    $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
+
+    if ($adminUserExists) {
+        if (Auth::check()) {
+            $user = Auth::user();
+            return response()->json(['isSetup' => true, 'authenticated' => true, 'user' => $user]);
+        } else {
+            return response()->json(['isSetup' => true, 'authenticated' => false, 'user' => null]);
+        }
     } else {
-        return response()->json(['authenticated' => false]);
+        return response()->json(['isSetup' => false, 'authenticated' => false, 'user' => null]);
     }
 });
