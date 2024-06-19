@@ -33,14 +33,15 @@ const drawerWidth = 240;
 import FriendList from './MiniComponents/FriendList';
 import { Tooltip, useMediaQuery } from '@mui/material';
 import Profile from './Profile';
-
+import Home from '../Page/User/Home';
+import PostCreate from '../Page/User/PostCreate';
 import Logout from '../Fetch/Logout';
 const GetIcon = ({ text }) => {
   return (
     <>
       {
-        text === 'Home' ? <DashboardIcon></DashboardIcon> :
-          text === 'Dashboard' ? <HomeIcon></HomeIcon> :
+        text === 'Dashboard' ? <DashboardIcon></DashboardIcon> :
+          text === 'Home' ? <HomeIcon></HomeIcon> :
             text === 'Blog' ? <NewspaperIcon></NewspaperIcon> :
               text === 'Profile' ? <AccountBoxIcon></AccountBoxIcon> :
                 text === 'Account' ? <ManageAccountsIcon></ManageAccountsIcon> :
@@ -105,7 +106,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLoading, isLoad, open, handleDrawerClose, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
+export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userData, ClickLoading, isLoad, open, handleDrawerClose, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
   const theme = useTheme();
 
   const isLargeScreen = useMediaQuery('(min-width:800px)');
@@ -116,12 +117,11 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLo
 
       toggleDarkMode();
     } else if (setting === 'Logout') {
-      
-      Logout(null, setIsLoggedIn);
-      setTabValue(0);
-    }else{
 
-      setTabValue(v);
+      Logout(null, setIsLoggedIn);
+      setTabValue(setting);
+    } else {
+      setTabValue(setting);
     }
     ClickLoading(true);
   };
@@ -130,7 +130,7 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLo
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <Header setIsLoggedIn={setIsLoggedIn} ClickLoading={ClickLoading} checkAuthentication={checkAuthentication} isLoad={isLoad} settings={slicedTabs} pages={firstThreeTabs} toggleDarkMode={toggleDarkMode} open={open} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue} handleDrawerOpen={handleDrawerOpen}></Header>
+      <Header setIsLoggedIn={setIsLoggedIn} ClickLoading={ClickLoading} userData={userData} checkAuthentication={checkAuthentication} isLoad={isLoad} settings={slicedTabs} pages={firstThreeTabs} toggleDarkMode={toggleDarkMode} open={open} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue} handleDrawerOpen={handleDrawerOpen}></Header>
 
       <Drawer variant="permanent" open={open}>
         <DrawerHeader>
@@ -163,7 +163,7 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLo
                         minWidth: 0,
                         mr: open ? 3 : 'auto',
                         justifyContent: 'center',
-                        color: TabValue === index ? theme.palette.primary.main : theme.palette.background.main,
+                        color: TabValue === text ? theme.palette.primary.main : theme.palette.background.main,
                       }}
                     >
                       <GetIcon text={text}></GetIcon>
@@ -191,7 +191,7 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLo
                         minWidth: 0,
                         mr: open ? 3 : 'auto',
                         justifyContent: 'center',
-                        color: TabValue === index ? theme.palette.primary.main : theme.palette.background.main,
+                        color: TabValue === text ? theme.palette.primary.main : theme.palette.background.main,
                       }}
                     >
                       <GetIcon text={text}></GetIcon>
@@ -209,16 +209,21 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, ClickLo
 
       </Drawer>
       <Box component="main" sx={{
-        flexGrow: 1, p: 3,mr:isLargeScreen?'20%':'0'
+        flexGrow: 1, p: 3, mr: isLargeScreen ? '20%' : '0'
       }}>
         <DrawerHeader />
-        {tabs[TabValue]==="Profile"?
-        <Profile></Profile>
-        : 
-        '' 
+        {TabValue === "Profile" ?
+          <Profile userData={userData}></Profile>
+          :TabValue === "Home" ?
+          <>
+          
+          <PostCreate></PostCreate>
+          <Home></Home>
+          </>
+          :''
         }
       </Box>
-      {isLargeScreen && checkAuthentication ?
+      {isLargeScreen && checkAuthentication?
         <Box sx={{ flexGrow: 1, width: '20%', right: 0 }} position='fixed'>
 
           <DrawerHeader />

@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use App\Models\User;
-
+use Illuminate\Support\Facades\DB; 
 class CheckAdminUser
 {
     public function handle($request, Closure $next)

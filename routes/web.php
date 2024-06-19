@@ -6,35 +6,32 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SetupController;
+use App\Http\Controllers\EnvController;
+use App\Http\Controllers\UserController;
 
 // API routes for authentication
 
+Route::get('/env', [EnvController::class, 'index']);
 Route::middleware('auth')->get('/logout', [AuthController::class, 'logout']);
 
 
-Route::post('/setup', [SetupController::class, 'setup'])->name('setup'); 
+Route::post('/setup/submit', [SetupController::class, 'setup'])->name('setup'); 
 Route::post('/setup/SetupDB', [SetupController::class, 'SetupDB'])->name('SetupDB');
 Route::post('/setup/CheckDB', [SetupController::class, 'CheckDB'])->name('CheckDB');  
 
-Route::get('/environmentFilePath', function () {
-
-    $envFile = app()->environmentFilePath();
-    
-    $str = file_get_contents($envFile);
-    return response()->json([ 
-        $envFile =>$str
-    ]);
-});
 Route::get('/setup', function () {
     $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
 
     if ($adminUserExists) {
-        return route('login');
+        return redirect()->route('main');
+        return $adminUserExists;
     } else {
 
         return view('setup');
     }
 });
+
+
 
 Route::get('/', function () {
     try {
@@ -42,7 +39,7 @@ Route::get('/', function () {
         DB::connection()->getPdo();
         $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
 
-        if (!$adminUserExists) {
+        if ($adminUserExists===0) {
             // No admin user exists, redirect to setup or perform appropriate action
             return redirect()->route('setup');
         }
@@ -53,8 +50,11 @@ Route::get('/', function () {
     }
 
     return view('main');
-});
+})->name("main");
 
+
+
+Route::post('/profile/saveImage',[UserController::class,"changeProfile"])->name("saveImage");
 Route::middleware([\App\Http\Middleware\CheckAdminUser::class])->group(function () {
 
     
@@ -73,7 +73,7 @@ Route::middleware([\App\Http\Middleware\CheckAdminUser::class])->group(function 
 
 
 
-// Route definition
+
 Route::middleware('auth')->get('/check-auth', function () {
     $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
 

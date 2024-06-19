@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GlobalStyles, ThemeProvider, Typography, createTheme } from '@mui/material';
 import { Box, Switch } from '@mui/material';
 import LeftMenu from './Components/MainBody';
-import CheckAuth from './Fetch/Auth';
+import { CheckAuth } from './Fetch/Auth';
 const lightTheme = createTheme({
     palette: {
         mode: 'light',
@@ -87,10 +87,26 @@ const App = () => {
     const [darkMode, setDarkMode] = useState(
         localStorage.getItem('darkMode') === 'true'
     );
-    const [isLoggedIn, setIsLoggedIn, userData] = CheckAuth();
+    const [isLoggedIn, setIsLoggedIn] = useState({});
+    const [userData, setUserData] = useState({});
     const [open, setOpen] = React.useState(false);
-    const tab=localStorage.getItem('TabValue');
-    const [TabValue, setTabValue] = React.useState(0);
+    const tab = localStorage.getItem('TabValue');
+    const [TabValue, setTabValue] = React.useState('');
+
+
+    useEffect(() => {
+        const check = async () => {
+            const authData = await CheckAuth();
+            setIsLoggedIn(authData.authenticated);
+            setUserData(authData.user); 
+        };
+        check(); // Initial check when component mounts
+
+        const intervalId = setInterval(check, 5000); // Check every 5 seconds
+
+        // Clear interval on component unmount to prevent memory leaks
+        return () => clearInterval(intervalId);
+    }, []);
 
     const handleDrawerOpen = () => {
         setOpen(true);
@@ -99,7 +115,7 @@ const App = () => {
         setOpen(false);
     };
     useEffect(() => {
-        if (TabValue !== null) {
+        if (TabValue !== '') {
             localStorage.setItem('TabValue', TabValue);
         }
     }, [TabValue]);
@@ -108,7 +124,7 @@ const App = () => {
         if (storedTabValue !== null) {
             setTabValue(storedTabValue);
         } else {
-            setTabValue(0); // Set a default value if no value is found
+            setTabValue(''); // Set a default value if no value is found
         }
     }, []);
     useEffect(() => {
@@ -140,7 +156,7 @@ const App = () => {
         <ThemeProvider theme={theme}>
 
             <GlobalStyles styles={globalStyles} />
-            <LeftMenu open={open} isLoad={isLoad} setIsLoggedIn={setIsLoggedIn} checkAuthentication={isLoggedIn} ClickLoading={ClickLoading} handleDrawerOpen={handleDrawerOpen} handleDrawerClose={handleDrawerClose} toggleDarkMode={toggleDarkMode} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue}></LeftMenu>
+            <LeftMenu open={open} isLoad={isLoad} setIsLoggedIn={setIsLoggedIn} userData={userData} checkAuthentication={isLoggedIn} ClickLoading={ClickLoading} handleDrawerOpen={handleDrawerOpen} handleDrawerClose={handleDrawerClose} toggleDarkMode={toggleDarkMode} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue}></LeftMenu>
             <Box sx={{
                 paddingTop: '5%',
                 height: '90.5vh',
@@ -148,8 +164,7 @@ const App = () => {
                 backgroundColor: theme.palette.background.default,
                 color: theme.palette.primary.white
             }}>
-
-                <Typography>Tab {TabValue}</Typography>
+ 
             </Box>
         </ThemeProvider>
     );

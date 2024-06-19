@@ -1,4 +1,8 @@
-import React, { useState ,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
+
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+
+import VisuallyHiddenInput from './Components/MiniComponents/vshidden';
 import {
     Container,
     Grid,
@@ -9,34 +13,57 @@ import {
     Button,
     Typography,
     Alert,
+    CardMedia,
 } from '@mui/material';
-
+import { LoadingButton } from '@mui/lab';
 const SetupForm = () => {
     const [isPass, setPass] = useState('not checked');
+    const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         app_name: '',
         user_name: '',
         email: '',
         password: '',
         password_confirmation: '',
-        db_host: 'localhost',
-        db_port: 3306,
-        db_database: 'schoolsystem_db_name',
-        db_username: 'root',
+        db_host: '',
+        db_port: '',
+        db_database: '',
+        db_username: '',
         db_password: '',
+        profile_path: '', // Add profile_path to formData
     });
-    const [resMSG,setMsg]=useState('');
+    const [resMSG, setMsg] = useState('');
     const [errors, setErrors] = useState({});
 
+    const [previewImage, setPreviewImage] = useState(null);
+    const [envVars, setEnvVars] = useState({});
+    const [message, setMessage] = useState('');
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if(name==="db_database"||name==="db_username"||name==="db_port"||name==="db_host"||name==="db_password"){
+        if (name === "db_database" || name === "db_username" || name === "db_port" || name === "db_host" || name === "db_password") {
             setPass("not checked");
+        }
+        if (name === "profile_path") {
+            const file = e.target.files[0];
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: file, // Store the file object directly
+            }));
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviewImage(reader.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                setPreviewImage(null);
+            }
         }
         setFormData((prevData) => ({
             ...prevData,
             [name]: value,
         }));
+
     };
 
     const validate = () => {
@@ -46,8 +73,10 @@ const SetupForm = () => {
         if (!formData.email) tempErrors.email = 'Email is required';
         if (!/\S+@\S+\.\S+/.test(formData.email)) tempErrors.email = 'Email is invalid';
         if (!formData.password) tempErrors.password = 'Password is required';
-        if (formData.password !== formData.password_confirmation)
+        if (formData.password !== formData.password_confirmation) {
+
             tempErrors.password_confirmation = 'Passwords must match';
+        }
         if (!formData.db_host) tempErrors.db_host = 'Host is required';
         if (!formData.db_port) tempErrors.db_port = 'Database Port is required';
         if (!formData.db_database) tempErrors.db_database = 'Database Name is required';
@@ -58,41 +87,43 @@ const SetupForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const data = {
-            user_name:formData.user_name,
-            email:formData.email,
-            password:formData.password, 
-            app_name: formData.app_name,
-        };
+
+        const formData = new FormData(e.target);
         if (validate() && isPass) {
-            fetch('/setup', {
+            fetch('/setup/submit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
-                body: JSON.stringify(data),
+                body: formData,
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log(data);
-                    // handle success response
+                .then(response => {
+                    var s = response.json();
+                    if (!response.ok) {
+                        console.error(s);
+                        throw new Error('Network response was not ok');
+                    }
+                    return s;
                 })
-                .catch((error) => {
-                    console.error('Error:', error);
-                    // handle error response
-                });
-        }
-    }; 
-     
-    function ResetCheck(){
+                .then(data => {
+                    if (data.error) {
 
-        setPass("not checked"); 
+                        console.error('Error:', data.error)
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    };
+
+    function ResetCheck() {
+
+        setPass("not checked");
     }
-    
-    function createDB(){
+
+    function createDB() {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const createDB = "/setup/SetupDB"; 
+        const createDB = "/setup/SetupDB";
         const data = {
             db_host: formData.db_host,
             db_port: formData.db_port,
@@ -102,7 +133,7 @@ const SetupForm = () => {
             app_name: formData.app_name,
         };
 
-       console.log(data);
+        console.log(data);
         fetch(createDB, {
             method: 'POST',
             headers: {
@@ -126,17 +157,15 @@ const SetupForm = () => {
                 } else {
                     // Handle failure (e.g., show error message)
 
-                    setPass(false); 
+                    setPass(false);
                 }
             })
             .catch(error => console.error('Error:', error));
-            
+
     }
     function checkDB() {
-         
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const createDB = "/setup/CreateDB";
-        const CheckDB = "/setup/CheckDB"; 
+        const CheckDB = "/setup/CheckDB";
         const data = {
             db_host: formData.db_host,
             db_port: formData.db_port,
@@ -146,7 +175,7 @@ const SetupForm = () => {
             app_name: formData.app_name,
         };
 
-       
+
         fetch(CheckDB, {
             method: 'POST',
             headers: {
@@ -170,19 +199,52 @@ const SetupForm = () => {
                 } else {
                     // Handle failure (e.g., show error message)
 
-                    setPass(false); 
+                    setPass(false);
                 }
             })
             .catch(error => console.error('Error:', error));
-            
+
     }
     useEffect(() => {
-        if(isPass!==true&&isPass!=="not checked"){
+        if (isPass !== true && isPass !== "not checked") {
             setInterval(() => {
                 checkDB();
-              }, 2000);
+            }, 2000);
         }
-      }, [isPass]);
+    }, [isPass]);
+
+
+    useEffect(() => {
+        const fetchEnvVars = async () => {
+            try {
+                const response = await fetch('/env', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                setEnvVars(data);
+                setFormData({
+                    ...formData,
+                    app_name: data.APP_NAME,
+                    db_host: data.DB_HOST,
+                    db_port: data.DB_PORT,
+                    db_database: data.DB_DATABASE,
+                    db_username: data.DB_USERNAME,
+                    db_password: data.DB_PASSWORD,
+                });
+            } catch (error) {
+                console.error('Fetch error:', error);
+            }
+        };
+
+        fetchEnvVars();
+
+    }, []); // Empty dependency array means this runs once after initial render
+
     return (
         <Container>
             <Grid container justifyContent="center">
@@ -208,7 +270,9 @@ const SetupForm = () => {
                                                 value={formData.app_name}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.app_name)}
-                                                helperText={errors.app_name}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
@@ -233,11 +297,43 @@ const SetupForm = () => {
                                                 value={formData.user_name}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.user_name)}
-                                                helperText={errors.user_name}
+
                                             />
                                         </Grid>
                                     </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} md={4}>
+                                            <Typography align="right" sx={{ pt: 2 }}>
+                                                Profile Picture
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={6} my={2}>
+                                            <Alert severity="info" >Only Accept png, jpeg and jpg</Alert>
+                                            <LoadingButton
+                                                component="label"
+                                                role={undefined}
+                                                variant="contained"
+                                                tabIndex={-1}
+                                                loading={loading}
+                                                loadingPosition="start"
+                                                sx={{ my: 2 }}
+                                                startIcon={<CloudUploadIcon />}
+                                            >
+                                                Upload file
+                                                <VisuallyHiddenInput type="file" id='profile_path' name='profile_path'
+                                                    onChange={handleChange}
+                                                    accept="image/png, image/jpeg, image/jpg"
+                                                />
+                                            </LoadingButton>
+                                            {previewImage ? <CardMedia
+                                                component="img"
+                                                sx={{ aspectRatio: "1/1" }}
+                                                image={previewImage}
+                                            /> : ''}
+
+                                        </Grid>
+                                    </Grid>
+                                    <Grid container spacing={2} >
                                         <Grid item xs={12} md={4}>
                                             <Typography align="right" sx={{ pt: 2 }}>
                                                 Email Address
@@ -253,7 +349,6 @@ const SetupForm = () => {
                                                 value={formData.email}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.email)}
-                                                helperText={errors.email}
                                             />
                                         </Grid>
                                     </Grid>
@@ -273,7 +368,6 @@ const SetupForm = () => {
                                                 value={formData.password}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.password)}
-                                                helperText={errors.password}
                                             />
                                         </Grid>
                                     </Grid>
@@ -293,7 +387,6 @@ const SetupForm = () => {
                                                 value={formData.password_confirmation}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.password_confirmation)}
-                                                helperText={errors.password_confirmation}
                                             />
                                         </Grid>
                                     </Grid>
@@ -318,7 +411,9 @@ const SetupForm = () => {
                                                 value={formData.db_host}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.db_host)}
-                                                helperText={errors.db_host}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
@@ -338,7 +433,9 @@ const SetupForm = () => {
                                                 value={formData.db_port}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.db_port)}
-                                                helperText={errors.db_port}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
@@ -357,7 +454,9 @@ const SetupForm = () => {
                                                 value={formData.db_database}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.db_database)}
-                                                helperText={errors.db_database}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
@@ -376,7 +475,9 @@ const SetupForm = () => {
                                                 value={formData.db_username}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.db_username)}
-                                                helperText={errors.db_username}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
@@ -396,32 +497,39 @@ const SetupForm = () => {
                                                 value={formData.db_password}
                                                 onChange={handleChange}
                                                 error={Boolean(errors.db_password)}
-                                                helperText={errors.db_password}
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
                                             />
                                         </Grid>
                                     </Grid>
                                     <Grid container spacing={2} sx={{ mt: 2 }}>
                                         <Grid item xs={12} md={4} />
                                         <Grid item xs={12} md={6} >
-                                        <Alert sx={{mb:3}} severity={isPass === "not checked" ? "info" : isPass ? "success" : "warning"}>{resMSG}{isPass === "not checked" ? "Not Checked" : isPass ? "Connection Passed!" : "Connection not check"}</Alert>
-                                        <Button
+                                            <Alert sx={{ mb: 3 }} severity={isPass === "not checked" ? "info" : isPass ? "success" : "warning"}>{resMSG}{isPass === "not checked" ? "Not Checked" : isPass ? "Connection Passed!" : "Connection not check"}</Alert>
+                                            <Button
                                                 variant="contained"
                                                 color={isPass === "not checked" ? "primary" : isPass ? "success" : "error"}
-                                                onClick={isPass === "not checked"?checkDB:isPass?ResetCheck:createDB}
+                                                onClick={isPass === "not checked" ? checkDB : isPass ? ResetCheck : createDB}
                                             >{isPass === "not checked" ? "Check Connection" : isPass ? "Recheck" : "Run Migrate"}
 
-                                            </Button> 
-                                            </Grid>
+                                            </Button>
+                                        </Grid>
                                     </Grid>
                                 </CardContent>
                             </Card>
 
                             <Grid container spacing={2} sx={{ mt: 2 }}>
-                            <Grid item xs={12} md={4} />
-                            <Grid item xs={12} md={6}>
-                                    <Button type="submit" disabled={isPass === "not checked"?true : isPass?false:true} variant="contained" color="primary">
+                                <Grid item xs={12} md={4} />
+                                <Grid item xs={12} md={6}>
+                                    <LoadingButton type="submit"
+                                        disabled={isPass === "not checked" ? true : isPass ? false : true}
+                                        variant="contained" color="primary"
+
+                                        loading={loading}
+                                    >
                                         Complete Setup
-                                    </Button>
+                                    </LoadingButton>
                                 </Grid>
                             </Grid>
                         </form>

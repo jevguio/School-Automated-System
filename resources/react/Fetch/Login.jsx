@@ -83,8 +83,8 @@ export default function Login({setIsLoggedIn}) {
     return (
         <React.Fragment>
             <Tooltip title="Login">
-                <Button variant="outlined" onClick={handleClickOpen}>
-                    <LoginIcon></LoginIcon>Login
+                <Button variant="outlined"  color='action' onClick={handleClickOpen}>
+                    <LoginIcon color='action'></LoginIcon>Login
                 </Button>
             </Tooltip>
 

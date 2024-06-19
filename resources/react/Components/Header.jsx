@@ -21,11 +21,14 @@ import MuiAppBar from '@mui/material/AppBar';
 import LinearProgress from '@mui/material/LinearProgress';
 import Login from '../Fetch/Login';
 import Logout from '../Fetch/Logout';
+ 
+import { useEffect, useState } from 'react';
+function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad, ClickLoading, open, pages, settings, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
+ 
 
-import CheckAuth from '../Fetch/Auth';
-function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoading, open, pages, settings, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
+   const [TabHead,setTabHead]=useState(0);
+   
 
-    const [userData,setUserData] =React.useState(CheckAuth()[2]);
 
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const theme = useTheme();
@@ -35,19 +38,22 @@ function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoa
     const isSmall = useMediaQuery('(min-width:700px)');
     const phone = useMediaQuery('(min-width:600px)');
     const handleChange = (event, newValue) => {
-        setTabValue(newValue);
-
+        console.log(TabHead+":"+TabValue);
+        setTabValue(pages[newValue]);
+        setTabHead(newValue);
         ClickLoading(true);
+         
     };
+     
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
 
     const handleUserMenu = (setting) => {
-        {
-            setting === 'Light Mode' || setting === 'Dark Mode' ?
-                toggleDarkMode() :
-                setting === 'Logout' ? Logout(handleCloseUserMenu, setIsLoggedIn) : ''
+        if(setting === 'Light Mode' || setting === 'Dark Mode' ){ 
+            toggleDarkMode();
+        }else if(setting === 'Logout'){
+            Logout(handleCloseUserMenu, setIsLoggedIn);
         }
         ClickLoading(true);
     };
@@ -55,8 +61,6 @@ function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoa
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
     };
-    React.useEffect(() => {  
-      }, [userData]);
     return (
         <AppBar position="fixed" open={open}>
             <Container  >
@@ -103,16 +107,16 @@ function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoa
 
                         </Box>
                     </Tooltip>
-                    {isSmall && !open && TabValue<3?
+                    {isSmall && !open && TabHead < 3 ?
                         <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
                             <Box sx={{ flexGrow: 1, display: { md: 'flex' } }}>
-                                <Tabs value={TabValue} onChange={handleChange} centered
+                                <Tabs value={TabHead} onChange={handleChange} centered
 
                                 >
                                     {pages.map((page, index) => (
 
                                         <Tooltip key={index} title={page} arrow>
-                                            <Tab label={page}  />
+                                            <Tab label={page} />
                                         </Tooltip>
 
                                     ))}
@@ -129,9 +133,9 @@ function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoa
                                 {phone ?
                                     <>
 
-                                        <Tooltip title="Open settings">
+                                        <Tooltip title="Account">
                                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                                <Avatar alt={userData.name?userData.name.toString().toUpperCase():''} src={userData.profile_path?userData.profile_path:'//'}  />
+                                                <Avatar alt={userData ?userData.name? userData.name.toString().toUpperCase() : '':''} src={userData?userData.profile_path ? "storage/"+userData.profile_path : '//':"//"} />
                                             </IconButton>
                                         </Tooltip>
                                         <Menu
@@ -161,7 +165,7 @@ function ResponsiveAppBar({ setIsLoggedIn, checkAuthentication, isLoad, ClickLoa
 
 
                                 }
-                            </> : <Login setIsLoggedIn={setIsLoggedIn}>
+                            </> : <Login setIsLoggedIn={setIsLoggedIn} >
                             </Login>}
 
 
