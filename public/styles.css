@@ -1,0 +1,299 @@
+html { scroll-behavior: smooth;
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #fff;
+    scroll-behavior: smooth; /* Add smooth scrolling */
+
+}
+
+/* Header and navigation */
+header {
+    background: #000000;
+    color: white;
+    padding: 1rem 0;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: color 0.3s, transform 0.3s; /* Smooth transition for hover effect */
+}
+
+nav ul li a:hover {
+    color: #2b2c2c;
+    transform: scale(2.2); /* Slightly increase size on hover */
+
+    
+}
+
+/* Sections */
+section {
+    padding: 4rem 2rem;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+#home {
+    background: url('background.jpeg') no-repeat center center/cover;
+    color: white;
+    padding: 10rem 2rem;
+}
+
+
+#home h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+#home h1:hover {
+    transform: scale(1.5);
+    transition:transform 0.3s, box-shadow 0.3s ;
+}
+
+
+#home p {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Portfolio section */
+#portfolio {
+    background: #111;
+}
+
+.portfolio-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.portfolio-item {
+    width: 30%;
+    margin: 1rem 0;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.portfolio-item iframe {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.portfolio-item p {
+    margin-top: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.portfolio-item:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* About section */
+#about {
+    background: #000000;
+}
+
+.about-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.about-text {
+    width: 60%;
+    text-align: left;
+}
+
+.about-photo {
+    width: 30%;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.about-photo img {
+    width: 100%;
+    border-radius: 8px;
+}
+
+.about-photo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.about-photo-placeholder {
+    margin-top: 2rem;
+    text-align: center;
+    max-width: 100%;
+    height: auto;
+}
+
+.about-photo-placeholder img {
+    width: 100%;
+    max-width: 1500px;
+    border-radius: 8px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.about-photo-placeholder img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+/* Booking section */
+#booking {
+    background: #111;
+}
+
+#booking form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#booking form input {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    width: 80%;
+    max-width: 400px;
+    background-color: #000;
+    color: #fff;
+    transition: border-color 0.3s;
+}
+
+#booking form input:focus {
+    border-color: #007BFF;
+}
+
+#booking form button {
+    padding: 10px 20px;
+    border: none;
+    background: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+#booking form button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Booking list */
+#bookingList {
+    list-style: none;
+    padding: 0;
+}
+
+#bookingList li {
+    background: #222;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.3s, transform 0.3s;
+}
+
+#bookingList li:hover {
+    background: #333;
+    transform: scale(1.02);
+}
+
+#bookingList li button {
+    border: none;
+    background: #dc3545;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+#bookingList li button:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+#bookingList li .edit {
+    background: #ffc107;
+    margin-right: 10px;
+}
+
+/* Footer */
+footer {
+    background: #222;
+    padding: 1rem;
+    text-align: center;
+    color: white;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    nav ul li {
+        display: block;
+        margin: 10px 0;
+    }
+
+    .about-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .about-text, .about-photo {
+        width: 100%;
+    }
+
+    .portfolio-item {
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    section {
+        padding: 2rem 1rem;
+    }
+
+    #home h1 {
+        font-size: 2rem;
+    }
+
+    #home p {
+        font-size: 1.2rem;
+    }
+
+    .portfolio-item iframe {
+        height: auto;
+    }
+
+    .about-photo-placeholder img {
+        max-width: 100%;
+    }
+}
+}
