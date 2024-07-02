@@ -87,8 +87,9 @@ const App = () => {
     const [darkMode, setDarkMode] = useState(
         localStorage.getItem('darkMode') === 'true'
     );
-    const [isLoggedIn, setIsLoggedIn] = useState({});
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState({});
+    const [studentData, setStudentData] = useState({});
     const [open, setOpen] = React.useState(false);
     const tab = localStorage.getItem('TabValue');
     const [TabValue, setTabValue] = React.useState('');
@@ -99,6 +100,7 @@ const App = () => {
             const authData = await CheckAuth();
             setIsLoggedIn(authData.authenticated);
             setUserData(authData.user); 
+            setStudentData(authData.student); 
         };
         check(); // Initial check when component mounts
 
@@ -156,7 +158,7 @@ const App = () => {
         <ThemeProvider theme={theme}>
 
             <GlobalStyles styles={globalStyles} />
-            <LeftMenu open={open} isLoad={isLoad} setIsLoggedIn={setIsLoggedIn} userData={userData} checkAuthentication={isLoggedIn} ClickLoading={ClickLoading} handleDrawerOpen={handleDrawerOpen} handleDrawerClose={handleDrawerClose} toggleDarkMode={toggleDarkMode} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue}></LeftMenu>
+            <LeftMenu open={open} isLoad={isLoad} studentData={studentData} setIsLoggedIn={setIsLoggedIn} userData={userData} checkAuthentication={isLoggedIn} ClickLoading={ClickLoading} handleDrawerOpen={handleDrawerOpen} handleDrawerClose={handleDrawerClose} toggleDarkMode={toggleDarkMode} darkMode={darkMode} TabValue={TabValue} setTabValue={setTabValue}></LeftMenu>
             <Box sx={{
                 paddingTop: '5%',
                 height: '90.5vh',

@@ -33,9 +33,11 @@ const drawerWidth = 240;
 import FriendList from './MiniComponents/FriendList';
 import { Tooltip, useMediaQuery } from '@mui/material';
 import Profile from './Profile';
-import Home from '../Page/User/Home';
+import PostView from '../Page/User/PostView';
 import PostCreate from '../Page/User/PostCreate';
 import Logout from '../Fetch/Logout';
+import DashboardPage from '../Page/Dashboard';
+import Attendance from '../Page/Attendance';
 const GetIcon = ({ text }) => {
   return (
     <>
@@ -106,7 +108,7 @@ const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' 
   }),
 );
 
-export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userData, ClickLoading, isLoad, open, handleDrawerClose, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
+export default function MiniDrawer({ studentData, setIsLoggedIn, checkAuthentication, userData, ClickLoading, isLoad, open, handleDrawerClose, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
   const theme = useTheme();
 
   const isLargeScreen = useMediaQuery('(min-width:800px)');
@@ -127,6 +129,12 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userDat
   };
   const slicedTabs = tabs.slice(3);
   const firstThreeTabs = tabs.slice(0, 3);
+  React.useEffect(() => {
+    if (!checkAuthentication) {
+      setTabValue = 'Home';
+    }
+  }, [checkAuthentication]);
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -140,7 +148,7 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userDat
         </DrawerHeader>
         <Divider />
         <List sx={{ padding: 0, margin: 0 }}>
-          {tabs.map((text, index) => (
+          {tabs.map((text, index) => ( 
             <ListItem key={text} disablePadding sx={{ display: 'block' }}>
               {checkAuthentication && index == 3 ?
                 <Divider />
@@ -148,7 +156,7 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userDat
                 : ''///////
 
               }
-              {index < 3 ?
+              {index < 3 &&((!checkAuthentication&&text!=='Dashboard')||checkAuthentication)?
                 <Tooltip title={text} placement="right" arrow>
                   <ListItemButton
                     sx={{
@@ -212,18 +220,21 @@ export default function MiniDrawer({ setIsLoggedIn, checkAuthentication, userDat
         flexGrow: 1, p: 3, mr: isLargeScreen ? '20%' : '0'
       }}>
         <DrawerHeader />
-        {TabValue === "Profile" ?
+        {TabValue === "Profile" && checkAuthentication ?
           <Profile userData={userData}></Profile>
-          :TabValue === "Home" ?
-          <>
-          
-          <PostCreate></PostCreate>
-          <Home></Home>
-          </>
-          :''
+          : TabValue === "Home" ?
+            <>
+              {checkAuthentication && (userData ? userData.type === 'admin' : '' || userData ? userData.type === 'teacher' : '') ?
+                <PostCreate userData={userData}></PostCreate> : ''}
+
+              <PostView studentData={studentData}></PostView>
+            </>
+            : TabValue === "Dashboard" ? <DashboardPage></DashboardPage>
+              : TabValue === "Program & Course" ? <Attendance></Attendance>
+                : ''
         }
       </Box>
-      {isLargeScreen && checkAuthentication?
+      {isLargeScreen && checkAuthentication ?
         <Box sx={{ flexGrow: 1, width: '20%', right: 0 }} position='fixed'>
 
           <DrawerHeader />

@@ -14,7 +14,7 @@ import { Alert, Tooltip } from '@mui/material';
 
 // Usage
 
-export default function Login({setIsLoggedIn}) {
+export default function Login({setIsLoggedIn,setTabValue}) {
    
     const [open, setOpen] = React.useState(false);
 
@@ -47,10 +47,12 @@ export default function Login({setIsLoggedIn}) {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
         try {
-            const response = await fetch('/login', {
+            const response = await fetch('./login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': csrfToken,
                 },
                 body: JSON.stringify({ name, email, password, password_confirmation: passwordConfirmation }),
@@ -65,6 +67,7 @@ export default function Login({setIsLoggedIn}) {
                     handleClose();
                     setEmailError(false);
                     setIsLoggedIn(true);
+                    window.location.reload();
                 }else{
                      
                     setError(true);

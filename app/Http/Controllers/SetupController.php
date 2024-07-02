@@ -16,11 +16,10 @@ class SetupController extends Controller
         
         if ($request->ajax()) {
             $validator = Validator::make($request->all(), [
-                'user_name' => 'required',
+                'username' => 'required',
                 'email' => 'required|email',
                 'password' => 'required|min:8',
                 'app_name' => 'required',
-                'profile_path' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Validate profile picture
            ]);
         
             if ($validator->fails()) {
@@ -32,7 +31,7 @@ class SetupController extends Controller
             try {
                 // Create new user
                 $user = new User();
-                $user->name = $request->input('user_name');
+                $user->name = $request->input('username');
                 $user->email = $request->input('email');
                 $user->password = Hash::make($request->input('password'));
                 $user->type = 'admin';
@@ -46,10 +45,28 @@ class SetupController extends Controller
                         'error' => 'profile_path not found.',
                     ]);
                 }
-
+                if ($request->hasFile('logo')) {
+                    $file = $request->file('logo');
+                    $extension = $file->getClientOriginalExtension();
+                    $filename = 'logo.png';
+                    $destinationPath = public_path('/resources/react/img');
+                    
+                    // Move the file to the specified directory
+                    $file->move($destinationPath, $filename);
+                }else{
+                    return response()->json(['error'  => 'Image uploaded successfully.']);
+               
+                }
 
                 $user->save();
         
+                DB::table('departments')->insert([
+                    'name' => 'Faculty',
+                    'description' => 'The Faculty department.',
+                    'dean_user_id' => 1, // Make sure this user exists
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
                 // Update environment file
                 $envFile = app()->environmentFilePath();
                 $str = file_get_contents($envFile);
@@ -70,6 +87,7 @@ class SetupController extends Controller
                     throw new \Exception("Unable to write to environment file.");
                 }
         
+                Artisan::call('storage:link');
                 return response()->json([
                     'redirect' => route('setup'),
                     'message' => 'Setup completed.',
@@ -177,7 +195,7 @@ class SetupController extends Controller
         ];
 
         foreach ($envData as $key => $value) {
-            $str = preg_replace("/^{$key}=.*/m", "{$key}='{$value}'", $str);
+            $str = preg_replace("/^{$key}=.*/m", "{$key}={$value}", $str);
         }
         try {
             config([

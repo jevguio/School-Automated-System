@@ -9,9 +9,12 @@ class CreatePostsTable extends Migration
     {
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained('courses');
+            $table->string('departments');
             $table->foreignId('teacher_id')->constrained('users');
-            $table->text('content');
+            $table->string('title');
+            $table->string('description');
+            $table->json('fileImage');
+            $table->string('departments_value'); 
             $table->timestamps();
         });
     }

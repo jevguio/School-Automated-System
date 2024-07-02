@@ -8,16 +8,25 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SetupController;
 use App\Http\Controllers\EnvController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\PostController;
+use Illuminate\Support\Facades\Auth;
 
+use App\Http\Controllers\DepartmentsController;
 // API routes for authentication
 
 Route::get('/env', [EnvController::class, 'index']);
 Route::middleware('auth')->get('/logout', [AuthController::class, 'logout']);
 
 
-Route::post('/setup/submit', [SetupController::class, 'setup'])->name('setup'); 
+Route::post('/post/submit', [PostController::class, 'store'])->name('post.submit'); 
+Route::post('/post/get', [PostController::class, 'get'])->name('post.get'); 
+
+
+Route::post('/setup/submit', [SetupController::class, 'setup'])->name('setup.submit'); 
 Route::post('/setup/SetupDB', [SetupController::class, 'SetupDB'])->name('SetupDB');
 Route::post('/setup/CheckDB', [SetupController::class, 'CheckDB'])->name('CheckDB');  
+
+Route::post('/getDepartments', [DepartmentsController::class, 'index'])->name('getDepartments');  
 
 Route::get('/setup', function () {
     $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
@@ -29,7 +38,7 @@ Route::get('/setup', function () {
 
         return view('setup');
     }
-});
+})->name('setup');
 
 
 
@@ -39,7 +48,7 @@ Route::get('/', function () {
         DB::connection()->getPdo();
         $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
 
-        if ($adminUserExists===0) {
+        if (!$adminUserExists) {
             // No admin user exists, redirect to setup or perform appropriate action
             return redirect()->route('setup');
         }
@@ -73,8 +82,7 @@ Route::middleware([\App\Http\Middleware\CheckAdminUser::class])->group(function 
 
 
 
-
-Route::middleware('auth')->get('/check-auth', function () {
+Route::post('/check-auth', function () {
     $adminUserExists = \App\Models\User::where('type', 'admin')->exists();
 
     if ($adminUserExists) {

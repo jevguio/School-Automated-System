@@ -4,8 +4,10 @@ export const CheckAuth = async () => {
   
   try {
     const response = await fetch('/check-auth', {
-      method: 'GET',
-      headers: {
+      method: 'post',
+      headers: { 
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': csrfToken,
       },
@@ -13,7 +15,7 @@ export const CheckAuth = async () => {
 
     if (response.ok) {
       const data = await response.json(); 
-      return { authenticated: data.authenticated, user: data.user };
+      return { authenticated: data.authenticated, user: data.user ,student:data.student};
     } else {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Authentication check failed');
@@ -29,16 +31,17 @@ export const GetUser = async () => {
   
   try {
     const response = await fetch('/check-auth', {
-      method: 'GET',
+      method: 'post',
       headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
         'X-CSRF-TOKEN': csrfToken,
       },
     });
 
     if (response.ok) {
       const data = await response.json(); 
-      return {user: data.user };
+      return {user: data.user,student:data.student };
     } else {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Authentication check failed');

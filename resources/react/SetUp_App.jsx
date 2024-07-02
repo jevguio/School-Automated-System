@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
@@ -16,12 +16,23 @@ import {
     CardMedia,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
-const SetupForm = () => {
+
+import Box from '@mui/material/Box';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import StepContent from '@mui/material/StepContent';
+import Paper from '@mui/material/Paper';
+
+
+
+export default function VerticalLinearStepper() {
+
     const [isPass, setPass] = useState('not checked');
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         app_name: '',
-        user_name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -29,15 +40,15 @@ const SetupForm = () => {
         db_port: '',
         db_database: '',
         db_username: '',
-        db_password: '',
-        profile_path: '', // Add profile_path to formData
-    });
-    const [resMSG, setMsg] = useState('');
+        db_password: '', 
+    }); 
+    const [logo, setLogo] = useState({});
+    const [profile_path, setprofile_path] = useState({});
     const [errors, setErrors] = useState({});
 
     const [previewImage, setPreviewImage] = useState(null);
-    const [envVars, setEnvVars] = useState({});
-    const [message, setMessage] = useState('');
+    const [previewLogoImage, setPreviewLogoImage] = useState(null); 
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name === "db_database" || name === "db_username" || name === "db_port" || name === "db_host" || name === "db_password") {
@@ -45,10 +56,8 @@ const SetupForm = () => {
         }
         if (name === "profile_path") {
             const file = e.target.files[0];
-            setFormData((prevData) => ({
-                ...prevData,
-                [name]: file, // Store the file object directly
-            }));
+            setprofile_path(file);
+            console.log("profile_path" , file);
             if (file) {
                 const reader = new FileReader();
                 reader.onloadend = () => {
@@ -59,17 +68,31 @@ const SetupForm = () => {
                 setPreviewImage(null);
             }
         }
+        if (name === "logo") {
+            const file = e.target.files[0];
+            setLogo(file);
+
+            console.log("logo" ,file);
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviewLogoImage(reader.result);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                setPreviewLogoImage(null);
+            }
+        }
         setFormData((prevData) => ({
             ...prevData,
             [name]: value,
         }));
-
     };
 
     const validate = () => {
         let tempErrors = {};
         if (!formData.app_name) tempErrors.app_name = 'School Name is required';
-        if (!formData.user_name) tempErrors.user_name = 'Username is required';
+        if (!formData.username) tempErrors.username = 'Username is required';
         if (!formData.email) tempErrors.email = 'Email is required';
         if (!/\S+@\S+\.\S+/.test(formData.email)) tempErrors.email = 'Email is invalid';
         if (!formData.password) tempErrors.password = 'Password is required';
@@ -78,6 +101,10 @@ const SetupForm = () => {
             tempErrors.password_confirmation = 'Passwords must match';
         }
         if (!formData.db_host) tempErrors.db_host = 'Host is required';
+
+        if (!formData.profile_path) tempErrors.profile_path = 'profile image is required';
+        if (!formData.logo) tempErrors.logo = 'logo is required';
+
         if (!formData.db_port) tempErrors.db_port = 'Database Port is required';
         if (!formData.db_database) tempErrors.db_database = 'Database Name is required';
         if (!formData.db_username) tempErrors.db_username = 'Database User is required';
@@ -85,18 +112,31 @@ const SetupForm = () => {
         return Object.keys(tempErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const formData = new FormData(e.target);
+    const handleSubmit = () => {
+        setSubmited(true);
+        const uploadData = new FormData();
+        uploadData.append('username', formData.username);
+        uploadData.append('email', formData.email);
+        uploadData.append('password', formData.password);
+        uploadData.append('app_name', formData.app_name);
+        uploadData.append('profile_path', profile_path);
+        uploadData.append('logo', logo);
+        for (let [key, value] of uploadData.entries()) {
+            console.log(key + ":" + value);
+        }
+        for (let [key, value] of uploadData.entries()) {
+            console.log(key + ":" + value);
+        }
         if (validate() && isPass) {
             fetch('/setup/submit', {
                 method: 'POST',
-                headers: { 
+                headers: {
+
+                    'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 },
-                body: formData,
+                body: uploadData,
             })
                 .then(response => {
                     var s = response.json();
@@ -225,8 +265,7 @@ const SetupForm = () => {
                     throw new Error('Network response was not ok');
                 }
 
-                const data = await response.json();
-                setEnvVars(data);
+                const data = await response.json(); 
                 setFormData({
                     ...formData,
                     app_name: data.APP_NAME,
@@ -244,300 +283,355 @@ const SetupForm = () => {
         fetchEnvVars();
 
     }, []); // Empty dependency array means this runs once after initial render
+    const profile_path_ref = useRef(null)
+    const logo_ref = useRef(null)
+    React.useEffect(() => {
+        if (errors.profile_path) {
+            profile_path_ref.current.focus();
+        }
+    }, [errors.profile_path]);
+    React.useEffect(() => {
+        if (errors.logo) {
+            logo_ref.current.focus();
+        }
+    }, [errors.logo]);
+    let [isSubmiged, setSubmited] = useState(false);
 
-    return (
-        <Container>
-            <Grid container justifyContent="center">
-                <Typography variant='h1'>Website Setup</Typography>
-                <Grid item xs={12} md={8} sx={{ my: 5 }}>
-                    <CardContent>
-                        <form onSubmit={handleSubmit}>
-                            <Card variant="outlined" sx={{ mb: 4 }}>
-                                <CardHeader title="Website" />
-                                <CardContent>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                School Name
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="app_name"
-                                                name="app_name"
-                                                label="School Name"
-                                                value={formData.app_name}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.app_name)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
+    //this to handle the error that will not show until form change
 
-                            <Card variant="outlined" sx={{ mb: 4 }}>
-                                <CardHeader title="Admin Account" />
-                                <CardContent>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Username
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="user_name"
-                                                name="user_name"
-                                                label="Username"
-                                                value={formData.user_name}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.user_name)}
+    React.useEffect(() => {
+        if (isSubmiged) {
+            validate();
+        } else {
 
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Profile Picture
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6} my={2}>
-                                            <Alert severity="info" >Only Accept png, jpeg and jpg</Alert>
-                                            <LoadingButton
-                                                component="label"
-                                                role={undefined}
-                                                variant="contained"
-                                                tabIndex={-1}
-                                                loading={loading}
-                                                loadingPosition="start"
-                                                sx={{ my: 2 }}
-                                                startIcon={<CloudUploadIcon />}
-                                            >
-                                                Upload file
-                                                <VisuallyHiddenInput type="file" id='profile_path' name='profile_path'
-                                                    onChange={handleChange}
-                                                    accept="image/png, image/jpeg, image/jpg"
-                                                />
-                                            </LoadingButton>
-                                            {previewImage ? <CardMedia
-                                                component="img"
-                                                sx={{ aspectRatio: "1/1" }}
-                                                image={previewImage}
-                                            /> : ''}
+        }
+    }, [formData]);
+    const [activeStep, setActiveStep] = React.useState(0);
 
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} >
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Email Address
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="email"
-                                                name="email"
-                                                label="Email Address"
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.email)}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Password
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="password"
-                                                name="password"
-                                                label="Password"
-                                                type="password"
-                                                value={formData.password}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.password)}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Confirm Password
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="password_confirmation"
-                                                name="password_confirmation"
-                                                label="Confirm Password"
-                                                type="password"
-                                                value={formData.password_confirmation}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.password_confirmation)}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
+    const handleNext = () => {
+        setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    };
 
-                            <Card variant="outlined" sx={{ mb: 4 }}>
-                                <CardHeader title="Database MYSQL" />
-                                <CardContent>
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Host
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="db_host"
-                                                name="db_host"
-                                                label="Host"
-                                                value={formData.db_host}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.db_host)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Database Port
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="db_port"
-                                                name="db_port"
-                                                label="Database Port"
-                                                type="number"
-                                                value={formData.db_port}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.db_port)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Database Name
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="db_database"
-                                                name="db_database"
-                                                label="Database Name"
-                                                value={formData.db_database}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.db_database)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Database User
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="db_username"
-                                                name="db_username"
-                                                label="Database User"
-                                                value={formData.db_username}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.db_username)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4}>
-                                            <Typography align="right" sx={{ pt: 2 }}>
-                                                Database Password
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={12} md={6}>
-                                            <TextField
-                                                fullWidth
-                                                id="db_password"
-                                                name="db_password"
-                                                label="Database Password"
-                                                type="password"
-                                                value={formData.db_password}
-                                                onChange={handleChange}
-                                                error={Boolean(errors.db_password)}
-                                                InputLabelProps={{
-                                                    shrink: true,
-                                                }}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                    <Grid container spacing={2} sx={{ mt: 2 }}>
-                                        <Grid item xs={12} md={4} />
-                                        <Grid item xs={12} md={6} >
-                                            <Alert sx={{ mb: 3 }} severity={isPass === "not checked" ? "info" : isPass ? "success" : "warning"}>{resMSG}{isPass === "not checked" ? "Not Checked" : isPass ? "Connection Passed!" : "Connection not check"}</Alert>
-                                            <Button
-                                                variant="contained"
-                                                color={isPass === "not checked" ? "primary" : isPass ? "success" : "error"}
-                                                onClick={isPass === "not checked" ? checkDB : isPass ? ResetCheck : createDB}
-                                            >{isPass === "not checked" ? "Check Connection" : isPass ? "Recheck" : "Run Migrate"}
+    const handleBack = () => {
+        setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    };
 
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                </CardContent>
-                            </Card>
+    const handleReset = () => {
+        setActiveStep(0);
+    };
+    const steps = [
+        {
+            label: 'Database Setup',
+            description: <Card variant="outlined" sx={{ mb: 4 }}>
+                <CardHeader title="Database MYSQL" />
+                <CardContent sx={{ width: '70%', marginLeft: 'auto', marginRight: 'auto' }}>
+                    <Grid container spacing={2}>
+                        <Grid item
+                            sx={{ width: '100%', maxWidth: '50%', minWidth: '70px' }}>
+                            <TextField
 
-                            <Grid container spacing={2} sx={{ mt: 2 }}>
-                                <Grid item xs={12} md={4} />
-                                <Grid item xs={12} md={6}>
-                                    <LoadingButton type="submit"
-                                        disabled={isPass === "not checked" ? true : isPass ? false : true}
-                                        variant="contained" color="primary"
+                                disabled={!!(isPass === "not checked" ? false : isPass ? true : false)}
+                                id="db_host"
+                                name="db_host"
+                                label="Host"
+                                value={formData.db_host}
+                                onChange={handleChange}
+                                error={Boolean(errors.db_host)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                        <Grid item
+                            sx={{ width: '100%', maxWidth: '50%', minWidth: '70px' }}>
+                            <TextField
+                                disabled={!!(isPass === "not checked" ? false : isPass ? true : false)}
+                                id="db_port"
+                                name="db_port"
+                                label="Database Port"
+                                type="number"
+                                value={formData.db_port}
+                                onChange={handleChange}
+                                error={Boolean(errors.db_port)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 0 }}>
+                        <Grid item xs={12}
+                            sx={{ width: '100%', minWidth: '70px' }}>
+                            <TextField
+                                fullWidth
+                                disabled={!!(isPass === "not checked" ? false : isPass ? true : false)}
+                                id="db_database"
+                                name="db_database"
+                                label="Database Name"
+                                value={formData.db_database}
+                                onChange={handleChange}
+                                error={Boolean(errors.db_database)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 0 }}>
+                        <Grid item xs={12}
+                            sx={{ width: '100%', minWidth: '70px' }}>
+                            <TextField
+                                fullWidth
+                                disabled={!!(isPass === "not checked" ? false : isPass ? true : false)}
+                                id="db_username"
+                                name="db_username"
+                                label="Database User"
+                                value={formData.db_username}
+                                onChange={handleChange}
+                                error={Boolean(errors.db_username)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} sx={{ mt: 0 }}>
+                        <Grid item xs={12}
+                            sx={{ width: '100%', minWidth: '70px' }}>
+                            <TextField
+                                fullWidth
+                                disabled={!!(isPass === "not checked" ? false : isPass ? true : false)}
+                                id="db_password"
+                                name="db_password"
+                                label="Database Password"
+                                type="password"
+                                value={formData.db_password}
+                                onChange={handleChange}
+                                error={Boolean(errors.db_password)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={1} sx={{ mt: 0 }}>
+                        <Grid item xs={12}
+                            sx={{ width: '100%', minWidth: '70px' }}>
+                            <Alert sx={{ mb: 1 }} severity={isPass === "not checked" ? "info" : isPass ? "success" : "warning"}>{isPass === "not checked" ? "Not Checked" : isPass ? "Connection Passed!" : "Connection not check"}</Alert>
+                            <Button
+                                variant="contained"
+                                color={isPass === "not checked" ? "primary" : isPass ? "success" : "error"}
+                                onClick={isPass === "not checked" ? checkDB : isPass ? ResetCheck : createDB}
+                            >{isPass === "not checked" ? "Check Connection" : isPass ? "Recheck" : "Run Migrate"}
 
-                                        loading={loading}
-                                    >
-                                        Complete Setup
-                                    </LoadingButton>
-                                </Grid>
-                            </Grid>
-                        </form>
-                    </CardContent>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            </Card>,
+        },
+        {
+            label: 'Website Setup',
+            description:
+                <CardContent sx={{ width: '70%', marginLeft: 'auto', marginRight: 'auto' }}>
+                    <Grid container spacing={2} >
+                        <Grid item 
+                            sx={{ width: '100%', minWidth: '70px' }}>
+                            <TextField
+                                fullWidth
+                                id="app_name"
+                                name="app_name"
+                                label="School Name"
+                                value={formData.app_name}
+                                onChange={handleChange}
+                                error={Boolean(errors.app_name)}
+                                InputLabelProps={{
+                                    shrink: true,
+                                }}
+                            />
+                        </Grid>
+                    </Grid>
+                            
+                    <Grid container spacing={2}>
+                        <Grid item sx={{ width: '100%', minWidth: '70px',marginTop:'2%'}}>
+                            <Alert severity="info" >Only Accept png, jpeg and jpg</Alert>
+                            {errors.logo ?
+                                <Alert severity="error" >{errors.logo}</Alert> : ''}
+                            <Button
+                                component="label"
+                                ref={logo_ref}
+                                role={undefined}
+                                variant="contained"
+                                tabIndex={-1}
+                                sx={{ my: 2 }}
+                                startIcon={<CloudUploadIcon />}
+                            >{previewLogoImage ? 'Change logo' : 'Upload Logo'}
+
+                                <VisuallyHiddenInput type="file" id='logo' name='logo'
+                                    onChange={handleChange}
+                                    accept="image/png, image/jpeg, image/jpg"
+                                    error={Boolean(errors.logo)}
+                                />
+                            </Button>
+                            {previewLogoImage ? <CardMedia
+                                component="img"
+                                sx={{ width: '100%' }}
+                                image={previewLogoImage}
+                            /> : ''}
+
+                        </Grid>
+                    </Grid>
+                </CardContent>
+            ,
+        },
+        {
+            label: 'Admin Setup',
+            description: <Box sx={{ width: '70%', marginLeft: 'auto', marginRight: 'auto' }}>
+                <Grid container spacing={2}>
+                    <Grid item sx={{ width: '100%' , minWidth: '70px' }}>
+                        <TextField
+                            fullWidth
+                            id="username"
+                            name="username"
+                            label="Username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            error={Boolean(errors.username)}
+
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </Container>
-    );
-};
+                <Grid container spacing={2}>
+                    <Grid item sx={{ width: '100%' , minWidth: '70px',marginTop:'2%' }}>
+                        <Alert severity="info" >Only Accept png, jpeg and jpg</Alert>
+                        {errors.profile_path ?
+                            <Alert severity="error" >{errors.profile_path}</Alert> : ''}
+                        <Button
+                            component="label"
+                            ref={profile_path_ref}
+                            role={undefined}
+                            variant="contained"
+                            tabIndex={-1}
+                            focus={errors.profile_path}
+                            sx={{ my: 2 }}
+                            startIcon={<CloudUploadIcon />}
+                        >{previewImage ? 'Change profile' : 'Upload file'}
+                            <VisuallyHiddenInput type="file" id='profile_path' name='profile_path'
+                                onChange={handleChange}
+                                accept="image/png, image/jpeg, image/jpg"
+                                error={Boolean(errors.profile_path)}
+                            />
+                        </Button>
+                        {previewImage ? <CardMedia
+                            component="img"
+                            sx={{ aspectRatio: "1/1" ,marginBottom:'1%'}}
+                            image={previewImage}
+                        /> : ''}
 
-export default SetupForm;
+                    </Grid>
+                </Grid>
+                <Grid container spacing={2} >
+                    <Grid item sx={{ width: '100%' , minWidth: '70px' }}>
+                        <TextField
+                            fullWidth
+                            id="email"
+                            name="email"
+                            label="Email Address"
+                            type="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            error={Boolean(errors.email)}
+                        />
+                    </Grid>
+                </Grid>
+                <Grid container spacing={2} sx={{ mt: 0 }}>
+                    <Grid item  sx={{ width: '100%' , minWidth: '70px' }}>
+                        <TextField
+                            fullWidth
+                            id="password"
+                            name="password"
+                            label="Password"
+                            type="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            error={Boolean(errors.password)}
+                        />
+                    </Grid>
+                </Grid>
+                <Grid container spacing={2} sx={{ mt: 0 }}>
+                    <Grid item sx={{ width: '100%' , minWidth: '70px' }}>
+                        <TextField
+                            fullWidth
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            label="Confirm Password"
+                            type="password"
+                            value={formData.password_confirmation}
+                            onChange={handleChange}
+                            error={Boolean(errors.password_confirmation)}
+                        />
+                    </Grid>
+                </Grid></Box>,
+        },
+    ];
+    return (
+        <Card sx={{ marginRight: 'auto', marginLeft: 'auto', maxWidth: '80vw', marginTop: '1%', marginBottom: '1%', padding: '2%' }}>
+            <Box sx={{ width: '100%' }}>
+                <Stepper activeStep={activeStep} orientation="vertical">
+                    {steps.map((step, index) => (
+                        <Step key={step.label}>
+                            <StepLabel
+                                optional={
+                                    index === 2 ? (
+                                        <Typography variant="caption">Last step</Typography>
+                                    ) : null
+                                }
+                            >
+                                {step.label}
+                            </StepLabel>
+                            <StepContent>
+                            {step.description}
+                                <Box sx={{ mb: 2 }}>
+                                    <div>
+                                        <Button
+                                            disabled={
+                                                (isPass === "not checked" ? true : isPass ? false : true) || 
+                                                (!previewImage && index === 2) || 
+                                                (!previewLogoImage && index === 1)
+                                              }
+                                              variant="contained"
+                                            onClick={handleNext}
+                                            sx={{ mt: 1, mr: 1 }}
+                                        >
+                                            {index === steps.length - 1 ? 'Finish' : 'Continue'}
+                                        </Button>
+                                        <Button
+                                            disabled={index === 0}
+                                            onClick={handleBack}
+                                            sx={{ mt: 1, mr: 1 }}
+                                        >
+                                            Back
+                                        </Button>
+                                    </div>
+                                </Box>
+                            </StepContent>
+                        </Step>
+                    ))}
+                </Stepper>
+                {activeStep === steps.length && (
+                    <Paper square elevation={0} sx={{ p: 3 }}>
+                        <Typography>All steps completed - you&apos;re finished</Typography>
+                        <LoadingButton type="button" onClick={handleSubmit}
+                            disabled={isPass === "not checked" ? true : isPass ? false : true}
+                            variant="contained" color="primary"
+                            sx={{ mt: 1, mr: 1 }}
+                            loading={loading}
+                        >
+                            Complete Setup
+                        </LoadingButton>
+                    </Paper>
+                )}
+            </Box>
+        </Card>
+    );
+} 

@@ -115,8 +115,8 @@ export default function MediaCard({ userData }) {
         <Card sx={{ maxWidth: '100%' }}>
             <CardMedia
                 sx={{ aspectRatio: 16 / 9, maxHeight: '250px', width: '100%', borderBottom: '1.2px lightgray solid' }}
-                image={userData.profile_path ? "storage/" + userData.profile_path : ProfileIcon}
-                title={userData.name}
+                image={userData?userData.profile_path ? "./storage/" + userData.profile_path : ProfileIcon:''}
+                title={userData?userData.name:''}
             />
             <Box sx={{ width: '35%', maxWidth: '200px', aspectRatio: '1/1', mt: '-10%', ml: 'auto', mr: 'auto', }}
             >
@@ -124,7 +124,7 @@ export default function MediaCard({ userData }) {
                 <Avatar
                     alt="Remy Sharp"
 
-                    src={previewImage ? previewImage : userData.profile_path ? "storage/" + userData.profile_path : ProfileIcon}
+                    src={previewImage ? previewImage : userData?userData.profile_path ? "./storage/" + userData.profile_path : ProfileIcon:''}
                     sx={{ width: '100%', height: '100%', border: '5px solid #743ad5', borderRadius: 100 }}
                 ></Avatar>
 
@@ -175,7 +175,7 @@ export default function MediaCard({ userData }) {
             <CardContent >
 
                 <Typography gutterBottom variant="h5" align='center' component="div">
-                    {userData.name}
+                    {userData?userData.name:''}
                 </Typography>
                 {isBioEdit ?
                     <SaveEdit saving={saving} setSaving={setSaving} label={'Biodata'} setBioEdit={setBioEdit} setBiodata={setBiodata} biodata={biodata} ></SaveEdit>
@@ -183,7 +183,7 @@ export default function MediaCard({ userData }) {
                     <Box sx={{ display: 'flex', ml: 'auto', mr: 'auto', justifyContent: 'center' }}>
 
                         <Typography variant="body2" align='center' color="text.secondary">
-                            {userData.biodata}
+                            {userData?userData.biodata:''}
                         </Typography>
 
                         <Tooltip title='Edit' arrow>

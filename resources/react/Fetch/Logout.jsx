@@ -19,6 +19,7 @@ export default function Logout(handleCloseUserMenu, setIsLoggedIn) {
                     handleCloseUserMenu();
                 }
                 setIsLoggedIn(false);
+                window.location.reload();
             } else {
                 // Logout failed, handle error
                 console.error('Logout failed' + data.message);

@@ -12,7 +12,6 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import { useTheme } from '@mui/material/styles';
-import cecLogo from '../img/cec logo.png';
 import { Tab, Tabs, useMediaQuery, styled } from '@mui/material';
 import Chat from './Chat'
 import Notification from './Notification'
@@ -21,51 +20,62 @@ import MuiAppBar from '@mui/material/AppBar';
 import LinearProgress from '@mui/material/LinearProgress';
 import Login from '../Fetch/Login';
 import Logout from '../Fetch/Logout';
- 
-import { useEffect, useState } from 'react';
-function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad, ClickLoading, open, pages, settings, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
- 
 
-   const [TabHead,setTabHead]=useState(0);
-   
+import { useEffect, useState, createContext, useContext, } from 'react';
+function ResponsiveAppBar({ setIsLoggedIn, userData, checkAuthentication, isLoad, ClickLoading, open, pages, settings, toggleDarkMode, darkMode, TabValue, setTabValue, handleDrawerOpen }) {
+
+
+    const [TabHead, setTabHead] = useState(0);
+
 
 
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     const theme = useTheme();
 
-    const isLargeScreen = useMediaQuery('(min-width:1000px)');
+    const isLargeScreen = useMediaQuery('(min-width:500px)');
 
     const isSmall = useMediaQuery('(min-width:700px)');
     const phone = useMediaQuery('(min-width:600px)');
     const handleChange = (event, newValue) => {
-        console.log(TabHead+":"+TabValue);
+        console.log(TabHead + ":" + TabValue);
         setTabValue(pages[newValue]);
         setTabHead(newValue);
         ClickLoading(true);
-         
+
     };
-     
+
     const handleCloseUserMenu = () => {
         setAnchorElUser(null);
     };
 
     const handleUserMenu = (setting) => {
-        if(setting === 'Light Mode' || setting === 'Dark Mode' ){ 
+        if (setting === 'Light Mode' || setting === 'Dark Mode') {
             toggleDarkMode();
-        }else if(setting === 'Logout'){
+        } else if (setting === 'Logout') {
+            setTabValue('Home');
             Logout(handleCloseUserMenu, setIsLoggedIn);
+            return;
         }
+
+        setTabValue(setting);
         ClickLoading(true);
     };
 
     const handleOpenUserMenu = (event) => {
         setAnchorElUser(event.currentTarget);
     };
+    const [appName, setAppName] = useState('');
+
+    useEffect(() => {
+        const appNameFromEnv = window.appName;
+        setAppName(appNameFromEnv);
+        document.title = appNameFromEnv;
+    }, []);
     return (
         <AppBar position="fixed" open={open}>
             <Container  >
                 <Toolbar disableGutters sx={{ flexGrow: 2, display: { md: 'flex' } }}>
-                    <Tooltip title="Cristal e-College" arrow>
+                    <Tooltip title={appName} arrow>
                         <Box sx={{ display: 'flex', padding: 0, alignItems: 'center', position: 'absolute', left: '0' }}>
                             <IconButton
                                 color="inherit"
@@ -79,7 +89,7 @@ function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad,
                             >
                                 <MenuIcon />
                             </IconButton>
-                            <Avatar src={cecLogo}></Avatar>
+                            <Avatar src='/resources/react/img/logo.png'></Avatar>
                             {isLargeScreen && !open ? <Typography
                                 variant="h6"
                                 noWrap
@@ -98,7 +108,7 @@ function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad,
                                     },
                                 }}
                             >
-                                Cristal e-College
+                                {appName}
                             </Typography>
                                 : ''}
 
@@ -107,24 +117,7 @@ function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad,
 
                         </Box>
                     </Tooltip>
-                    {isSmall && !open && TabHead < 3 ?
-                        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-                            <Box sx={{ flexGrow: 1, display: { md: 'flex' } }}>
-                                <Tabs value={TabHead} onChange={handleChange} centered
 
-                                >
-                                    {pages.map((page, index) => (
-
-                                        <Tooltip key={index} title={page} arrow>
-                                            <Tab label={page} />
-                                        </Tooltip>
-
-                                    ))}
-
-                                </Tabs>
-
-                            </Box>
-                        </Box> : ''}
                     <Box sx={{ flexGrow: 0, position: 'absolute', right: '0' }}>
                         {checkAuthentication ?
                             <>
@@ -135,7 +128,7 @@ function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad,
 
                                         <Tooltip title="Account">
                                             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                                <Avatar alt={userData ?userData.name? userData.name.toString().toUpperCase() : '':''} src={userData?userData.profile_path ? "storage/"+userData.profile_path : '//':"//"} />
+                                                <Avatar alt={userData ? userData.name ? userData.name.toString().toUpperCase() : '' : ''} src={userData ? userData.profile_path ? "storage/" + userData.profile_path : '//' : "//"} />
                                             </IconButton>
                                         </Tooltip>
                                         <Menu
@@ -165,8 +158,10 @@ function ResponsiveAppBar({ setIsLoggedIn,userData, checkAuthentication, isLoad,
 
 
                                 }
-                            </> : <Login setIsLoggedIn={setIsLoggedIn} >
-                            </Login>}
+                            </>
+                            :isLargeScreen||!open? <Login setIsLoggedIn={setIsLoggedIn} setTabValue={setTabValue} >
+                            </Login>
+                            :''}
 
 
                     </Box>
