@@ -12,6 +12,7 @@ use App\Http\Controllers\PostController;
 use Illuminate\Support\Facades\Auth;
 
 use App\Http\Controllers\DepartmentsController;
+use App\Http\Controllers\CourseController;
 // API routes for authentication
 
 Route::get('/env', [EnvController::class, 'index']);
@@ -27,6 +28,7 @@ Route::post('/setup/SetupDB', [SetupController::class, 'SetupDB'])->name('SetupD
 Route::post('/setup/CheckDB', [SetupController::class, 'CheckDB'])->name('CheckDB');  
 
 Route::post('/getDepartments', [DepartmentsController::class, 'index'])->name('getDepartments');  
+Route::post('/getCourse', [CourseController::class, 'index'])->name('getCourse');  
 
 Route::get('/setup', function () {
     $adminUserExists = \App\Models\User::where('type', 'admin')->exists();

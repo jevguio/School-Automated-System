@@ -23,11 +23,12 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import StepContent from '@mui/material/StepContent';
 import Paper from '@mui/material/Paper';
+import LighDarkMode from './LightDarkMode';
 
 
-
-export default function VerticalLinearStepper() {
-
+export default function VerticalLinearStepper({setMode,mode}) {
+ 
+    
     const [isPass, setPass] = useState('not checked');
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -576,6 +577,7 @@ export default function VerticalLinearStepper() {
     ];
     return (
         <Card sx={{ marginRight: 'auto', marginLeft: 'auto', maxWidth: '80vw', marginTop: '1%', marginBottom: '1%', padding: '2%' }}>
+            <LighDarkMode  setMode={setMode} mode={mode} ></LighDarkMode>
             <Box sx={{ width: '100%' }}>
                 <Stepper activeStep={activeStep} orientation="vertical">
                     {steps.map((step, index) => (

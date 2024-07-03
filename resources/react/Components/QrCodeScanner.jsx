@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import CameraAlt from '@mui/icons-material/CameraAlt';
 import HighlightOff from '@mui/icons-material/HighlightOff';
 import Webcam from 'react-webcam';
-import {QrReader} from 'react-qr-reader';
+import { QrReader } from 'react-qr-reader';
 import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 const bull = (
   <Box
@@ -19,10 +19,11 @@ const bull = (
   </Box>
 );
 
-export default function CameraQRScanner({setQrRes}) {
+export default function CameraQRScanner({ setQrRes }) {
   const [qrData, setQrData] = useState('');
   const [isScanning, setIsScanning] = useState(true);
   const [cameras, setCameras] = useState([]);
+  const qrRef = useRef(null);
   const [selectedCamera, setSelectedCamera] = useState('');
   useEffect(() => {
     // Fetch available cameras on component mount
@@ -39,13 +40,24 @@ export default function CameraQRScanner({setQrRes}) {
       console.error('Error enumerating devices:', error);
     }
   };
+  const startCamera = async (selectedDeviceId) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: selectedDeviceId },
+      });
+      setCameraOn(true);
+      // Attach stream to QrReader
+    } catch (err) {
+      console.error('Error accessing camera:', err);
+    }
+  };
 
   // Function to handle QR code scan
   const handleScan = (data) => {
     if (data) {
-      const par=JSON.parse(data).studentid; 
+      const par = JSON.parse(data).studentid;
       setQrData(data);
-      setQrRes(par); 
+      setQrRes(par);
     }
   };
 
@@ -62,15 +74,16 @@ export default function CameraQRScanner({setQrRes}) {
   // Function to handle camera change
   const handleCameraChange = event => {
     setSelectedCamera(event.target.value);
+    startCamera(event.target.value);
   };
 
   // Webcam component options
-  const webcamOptions = {
-    videoConstraints: {
-      facingMode: 'environment', // Use rear camera by default
-      deviceId: selectedCamera ? { exact: selectedCamera } : undefined
-    }
-  };
+  // const webcamOptions = {
+  //   videoConstraints: {
+  //     facingMode: 'environment', // Use rear camera by default
+  //     deviceId: selectedCamera ? { exact: selectedCamera } : undefined
+  //   }
+  // };
 
   return (
     <Card sx={{ minWidth: 275 }}>
@@ -78,21 +91,26 @@ export default function CameraQRScanner({setQrRes}) {
         <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
           QR Code Scanner
         </Typography>
-        {/* <Webcam
-          audio={false}
-          screenshotFormat="image/jpeg"
-          width="100%"
-          height="auto" 
-          {...webcamOptions}
-        /> */}
-          <QrReader
-            scanDelay={300} 
+        <Box sx={{border:'gray solid 1px'}}>
+          {/* <Webcam
+            audio={false}
+            screenshotFormat="image/jpeg"
+            width="100%"
+            height="auto"
+            {...webcamOptions}
+          /> */}
+          {isScanning ? <QrReader
+            scanDelay={300}
+
             onResult={handleScan}
-            containerStyle={{ width: '100%' }}  
-          />
+            containerStyle={{ width: '100%' }}
+            facingMode={{ exact: selectedCamera }}
+          /> : 'Camera Off'}
+
+        </Box>
       </CardContent>
       <CardActions>
-      {/* <FormControl fullWidth>
+        <FormControl fullWidth>
           <InputLabel id="camera-select-label" >Select Camera</InputLabel>
           <Select
             labelId="camera-select-label"
@@ -107,15 +125,15 @@ export default function CameraQRScanner({setQrRes}) {
               </MenuItem>
             ))}
           </Select>
-        </FormControl> */}
-      {/* <Button
+        </FormControl>
+        <Button
           variant="contained"
           color={isScanning ? 'secondary' : 'primary'}
           onClick={toggleScanning}
           startIcon={isScanning ? <HighlightOff /> : <CameraAlt />}
         >
           {isScanning ? 'Stop Scanning' : 'Start Scanning'}
-        </Button> */}
+        </Button>
       </CardActions>
     </Card>
   );
